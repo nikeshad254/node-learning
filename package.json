@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "chai aur codes backend video series tutorial follow",
   "main": "index.js",
+  "type": "module",
   "scripts": {
+    "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Nikesh Adhikari",
