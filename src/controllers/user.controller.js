@@ -310,6 +310,73 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "coverImage updated sucessfully"));
 });
 
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  // maile aruko channel herda, usko channel ko inof ra usle subscribe gareko rw uslai subscriber gareko channels auxa,
+  const { username } = req.params;
+
+  if (!username?.trim()) {
+    throw new ApiError(400, "Username is required");
+  }
+
+  const channel = await User.aggregate([
+    {
+      $match: { username: username?.toLowerCase() }, // suppose me, it gets me as a user then passed down
+    },
+    {
+      $lookup: {
+        from: "subscriptions", // from subscriptions collection
+        localField: "_id", // User document ko field
+        foreignField: "channel", // subscriptions collection ko field
+        as: "subscribers", // sabai lai as array named subscribers, { _id} || mero channel ko subscribers list auxa [passs down]
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        localField: "_id",
+        foreignField: "subscriber",
+        as: "subscribedTo", // maile subscribe gareko channel ko list auxa    [pass down]
+      },
+    },
+    {
+      $addFields: {
+        // malai dekhauna man lageko fields
+        subscriberCount: { $size: "$subscribers" }, // jun mathi baneko array thiyo, tesko length
+        channelsSubscribedToCount: { $size: "$subscribedTo" }, // jun mathi baneko array thiyo, tesko length
+        isSubscribed: {
+          // yo field chai check garna if maile tyo channel subscribe gareko xu ki xaina
+          $cond: {
+            if: { $in: [req.user._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        // mathi gareko sabai bata k k fields chai dekhauni vanxa
+        fullName: 1,
+        username: 1,
+        avatar: 1,
+        coverImage: 1,
+        email: 1,
+        subscriberCount: 1,
+        channelsSubscribedToCount: 1,
+        isSubscribed: 1,
+      },
+    },
+  ]);
+
+  if (!channel?.length) {
+    throw new ApiError(404, "Channel not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, channel[0], "Channel fetched sucessfully"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -320,4 +387,5 @@ export {
   updateAccountDetails,
   updateUserAvatar,
   updateUserCoverImage,
+  getUserChannelProfile,
 };
