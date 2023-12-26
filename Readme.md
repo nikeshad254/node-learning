@@ -1,3 +1,3 @@
 Learning node from yt-chai aur code's series chai aur javascript backend
 
-complete marking: Tut-19 vid-20 aggregation and others channel profile from our view created
+complete marking: Tut-20 vid-21 writing sub pipelines
